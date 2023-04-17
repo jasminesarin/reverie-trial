@@ -10,8 +10,13 @@
     "@rollup/plugin-commonjs": "^24.1.0",
     "@rollup/plugin-replace": "^5.0.2",
     "@types/node": "^18.15.11",
-    "phaser": "^3.60.0",
     "typescript": "^5.0.4",
     "vite": "^4.2.1"
+  },
+  "dependencies": {
+    "@enable3d/phaser-extension": "^0.25.3",
+    "phaser": "^3.60.0",
+    "poly-decomp": "^0.3.0",
+    "three": "^0.144.0"
   }
 }
