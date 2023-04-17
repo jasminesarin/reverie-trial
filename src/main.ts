@@ -1,25 +1,21 @@
-import Phaser from 'phaser'
-import PreloaderScene from './scenes/PreloaderScene'
+import * as Phaser from 'phaser'
+import { enable3d, Canvas } from '@enable3d/phaser-extension'
 import MainScene from './scenes/MainScene'
+import PreloadScene from './scenes/PreloadScene'
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
+  transparent: true,
   scale: {
-    // mode: Phaser.Scale.FIT,
-    width: 800,
-    height: 600,
-    // zoom: 2,
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1280,
+    height: 720,
   },
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 300 },
-      debug: true,
-    },
-  },
-  scene: [PreloaderScene, MainScene],
+  scene: [PreloadScene, MainScene],
+  ...Canvas(),
 }
 
-const game = new Phaser.Game(config)
-
-export default game
+window.addEventListener('load', () => {
+  enable3d(() => new Phaser.Game(config)).withPhysics('assets/ammo')
+})
