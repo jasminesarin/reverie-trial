@@ -1,4 +1,4 @@
-import { Scene3D, THREE } from '@enable3d/phaser-extension'
+import { ExtendedObject3D, Scene3D, THREE } from '@enable3d/phaser-extension'
 
 export default class MainScene extends Scene3D {
   constructor() {
@@ -33,7 +33,7 @@ export default class MainScene extends Scene3D {
 
     this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
 
-    this.third.load.gltf('public/assets/glb/terrace.glb').then((object) => {
+    this.third.load.gltf('/assets/glb/terrace.glb').then((object) => {
       const scene = object.scenes[0]
 
       const terrace = new ExtendedObject3D()
