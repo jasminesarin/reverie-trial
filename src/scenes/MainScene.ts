@@ -20,7 +20,7 @@ export default class MainScene extends Scene3D {
     const camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
-      1.5,
+      2,
       5000,
     )
     // now modify the features (if needed)
@@ -38,7 +38,7 @@ export default class MainScene extends Scene3D {
     // removing ground and orbital controls from the glb file
     this.third.warpSpeed('-ground', '-orbitControls')
 
-    this.third.load.gltf('/assets/glb/terrace2.glb').then((object) => {
+    this.third.load.gltf('/assets/glb/terrace3.glb').then((object) => {
       const scene = object.scenes[0]
 
       const terrace = new ExtendedObject3D()
@@ -51,7 +51,7 @@ export default class MainScene extends Scene3D {
       ambientLight.intensity = 0.65
       directionalLight.intensity = 0.65
 
-      orbitControls.target.set(0, 5, 0)
+      scene3D.orbitControls.target.set(0, 5, 0)
 
       // this.third.add.box({ x: 1, y: 2 })
       //this.third.physics.add.box({ x: 0, y: 4, z: 6 })
