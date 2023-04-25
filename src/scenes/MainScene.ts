@@ -7,31 +7,36 @@ export default class MainScene extends Scene3D {
 
   init() {
     this.accessThirdDimension()
+
     this.third.renderer.outputEncoding = THREE.LinearEncoding
   }
 
   preload() {}
 
   async create() {
-    // create a nice scene
+    // set up scene (light, ground, grid, sky, orbitControls)
     this.third.warpSpeed()
 
-    // this.third.add.box({ x: 1, y: 2 })
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      1.5,
+      5000,
+    )
+    // now modify the features (if needed)
+    // const camera= this.warpSpeed('camera')
+    camera.position.set(-10, 50, -50)
+    camera.lookAt(-50, 50, -30)
 
-    this.third.physics.add.box({ x: 0, y: 4, z: 6 })
+    const renderer = new THREE.WebGLRenderer()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    document.body.appendChild(renderer.domElement)
+    // additionally warpSpeed() returns the camera, ground, lights, orbitControls.
+    // const { camera, lights, orbitControls } = await this.warpSpeed()
 
-    // this.third.haveSomeFun()
-
-    //  this.third.warpSpeed('-ground', '-orbitControls')
-    //         Phaser.GameObjects.LightsManager;
-
-    //  const { hemisphereLight, ambientLight, directionalLight, } = this.third.lights(),
-    //  const intensity = 0.65
-    // hemisphereLight.intensity
-    // ambientLight.intensity
-    // directionalLight.intensity
-
-    this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
+    //loading glb file
+    // removing ground and orbital controls from the glb file
+    this.third.warpSpeed('-ground', '-orbitControls')
 
     this.third.load.gltf('/assets/glb/terrace.glb').then((object) => {
       const scene = object.scenes[0]
@@ -40,6 +45,31 @@ export default class MainScene extends Scene3D {
       terrace.name = 'scene'
       terrace.add(scene)
       this.third.add.existing(terrace)
+
+      const { hemisphereLight, ambientLight, directionalLight } = this.lights
+      hemisphereLight.intensity = 0.65
+      ambientLight.intensity = 0.65
+      directionalLight.intensity = 0.65
+
+      orbitControls.target.set(0, 5, 0)
+
+      // this.third.add.box({ x: 1, y: 2 })
+      //this.third.physics.add.box({ x: 0, y: 4, z: 6 })
+      // this.third.haveSomeFun()
+      //this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
+
+      //lights
+      // const { lights } = await this.warpSpeed(
+      //   'lights',
+      //   '-ground',
+      //   '-orbitControls',
+      // )
+
+      // const { hemisphereLight, ambientLight, directionalLight } = this.lights
+      // const intensity = 0.65
+      // hemisphereLight.intensity = intensity
+      // ambientLight.intensity = intensity
+      // directionalLight.intensity = intensity
 
       object.animations.forEach((anim, i) => {
         terrace.mixer = this.third.animationMixers.create(terrace)
