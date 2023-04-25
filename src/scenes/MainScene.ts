@@ -38,7 +38,7 @@ export default class MainScene extends Scene3D {
     // removing ground and orbital controls from the glb file
     this.third.warpSpeed('-ground', '-orbitControls')
 
-    this.third.load.gltf('/assets/glb/terrace.glb').then((object) => {
+    this.third.load.gltf('/assets/glb/terrace2.glb').then((object) => {
       const scene = object.scenes[0]
 
       const terrace = new ExtendedObject3D()
