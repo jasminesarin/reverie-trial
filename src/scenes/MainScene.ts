@@ -19,6 +19,7 @@ export default class MainScene extends Scene3D {
   }
   terrace!: ExtendedObject3D
   player!: ExtendedObject3D
+  controls!: ThirdPersonControls
 
   constructor() {
     super({ key: 'MainScene' })
@@ -33,33 +34,50 @@ export default class MainScene extends Scene3D {
   preload() {}
 
   async create() {
-    const { lights } = await this.third.warpSpeed('ground', '-orbitControls')
-    // const intensity = 0.01
-
-    // TODO: Fix this
-    // const { ambientLight, directionalLight, hemisphereLight } = lights
-    // hemisphereLight.intensity = 0.1
-    // ambientLight.intensity = 0.01
-    // directionalLight.intensity = 0.01
-
-    const zoom = 20
-    const w = this.cameras.main.width / zoom
-    const h = this.cameras.main.height / zoom
-    this.cams = {
-      ortho: this.third.cameras.orthographicCamera({
-        left: w / -2,
-        right: w / 2,
-        top: h / 2,
-        bottom: h / -2,
-      }),
-      perspective: this.third.camera,
-      active: 'perspective',
-      inTransition: false,
-      offset: null,
-    }
     // set up scene (light, ground, grid, sky, orbitControls)
     // this.third.warpSpeed('-ground')
 
+    // this.third.add.box({ x: 1, y: 2 })
+    //this.third.physics.add.box({ x: 0, y: 4, z: 6 })
+    // this.third.haveSomeFun()
+    //this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
+
+    // const renderer = new THREE.WebGLRenderer()
+    // renderer.setSize(window.innerWidth, window.innerHeight)
+    // document.body.appendChild(renderer.domElement)
+    // additionally warpSpeed() returns the camera, ground, lights, orbitControls.
+    // const { camera, lights, orbitControls } = await this.warpSpeed()
+
+    //loading glb file
+    // removing ground and orbital controls from the glb file
+    // this.third.warpSpeed('ground', '-orbitControls')
+
+    this.createWorld()
+    this.createCamera()
+    this.createScene()
+    this.createPlayer()
+    this.addControls()
+    // this.addCamera()
+    // this.moveCamera()
+  }
+
+  update() {}
+
+  private async createWorld() {
+    const { lights } = await this.third.warpSpeed('ground', '-orbitControls')
+
+    if (lights === undefined) {
+      throw new Error('Lights not loaded')
+    }
+
+    // TODO: Fix this
+    const { ambientLight, directionalLight, hemisphereLight } = lights
+    hemisphereLight.intensity = 0.65
+    ambientLight.intensity = 0.65
+    directionalLight.intensity = 0.65
+  }
+
+  private createCamera() {
     // const camera = new THREE.PerspectiveCamera(
     //   35,
     //   window.innerWidth / window.innerHeight,
@@ -72,28 +90,25 @@ export default class MainScene extends Scene3D {
     // const camera= this.warpSpeed('camera')
     //scene3D.orbitControls.target.set(0, 5, 0)
 
-    // this.third.add.box({ x: 1, y: 2 })
-    //this.third.physics.add.box({ x: 0, y: 4, z: 6 })
-    // this.third.haveSomeFun()
-    //this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
+    const zoom = 20
+    const w = this.cameras.main.width / zoom
+    const h = this.cameras.main.height / zoom
 
-    const renderer = new THREE.WebGLRenderer()
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    document.body.appendChild(renderer.domElement)
-    // additionally warpSpeed() returns the camera, ground, lights, orbitControls.
-    // const { camera, lights, orbitControls } = await this.warpSpeed()
-
-    //loading glb file
-    // removing ground and orbital controls from the glb file
-    // this.third.warpSpeed('ground', '-orbitControls')
-
-    this.createTerraceGLB()
-    this.createIdleGLB()
+    this.cams = {
+      ortho: this.third.cameras.orthographicCamera({
+        left: w / -2,
+        right: w / 2,
+        top: h / 2,
+        bottom: h / -2,
+      }),
+      perspective: this.third.camera,
+      active: 'perspective',
+      inTransition: false,
+      offset: null,
+    }
   }
 
-  update() {}
-
-  private createTerraceGLB() {
+  private createScene() {
     this.third.load.gltf('/assets/glb/terrace2.glb').then((object) => {
       const scene = object.scenes[0]
 
@@ -137,7 +152,7 @@ export default class MainScene extends Scene3D {
     })
   }
 
-  private createIdleGLB() {
+  private createPlayer() {
     this.third.load.gltf('public/assets/glb/idle.glb').then((object) => {
       const scene = object.scenes[0]
 
@@ -185,28 +200,31 @@ export default class MainScene extends Scene3D {
       // https://docs.panda3d.org/1.10/python/programming/physics/bullet/ccd
       this.player.body.setCcdMotionThreshold(1e-7)
       this.player.body.setCcdSweptSphereRadius(0.25)
-
-      const controls = new ThirdPersonControls(this.third.camera, this.player, {
-        offset: new THREE.Vector3(0, 1, 0),
-        targetRadius: 3,
-      })
-
-      // set initial view to 90 deg theta
-      controls.theta = 90
-
-      // Add Pointer Lock and Pointer Drag
-
-      if (!isTouchDevice) {
-        let pointerLock = new PointerLock(this.game.canvas)
-        let pointerDrag = new PointerDrag(this.game.canvas)
-
-        pointerDrag.onMove((delta) => {
-          if (pointerLock.isLocked()) {
-            this.moveTop = -delta.y
-            this.moveRight = delta.x
-          }
-        })
-      }
     })
+  }
+
+  private addControls() {
+    this.controls = new ThirdPersonControls(this.third.camera, this.player, {
+      offset: new THREE.Vector3(0, 1, 0),
+      targetRadius: 3,
+    })
+
+    // set initial view to 90 deg theta
+    this.controls.theta = 90
+
+    // Add Pointer Lock and Pointer Drag
+    if (!isTouchDevice) {
+      let pointerLock = new PointerLock(this.game.canvas)
+      let pointerDrag = new PointerDrag(this.game.canvas)
+
+      pointerDrag.onMove((delta) => {
+        if (pointerLock.isLocked()) {
+          // FIX?
+          // this.player.position.setY(-delta.y)
+          this.moveTop = -delta.y
+          this.moveRight = delta.x
+        }
+      })
+    }
   }
 }
