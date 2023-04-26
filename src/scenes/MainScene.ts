@@ -1,4 +1,5 @@
-import { ExtendedObject3D, Scene3D, THREE } from '@enable3d/phaser-extension'
+import { ExtendedObject3D, Scene3D, } from '@enable3d/phaser-extension'
+import * as THREE from 'three'
 
 export default class MainScene extends Scene3D {
   constructor() {
@@ -15,7 +16,7 @@ export default class MainScene extends Scene3D {
 
   async create() {
     // set up scene (light, ground, grid, sky, orbitControls)
-    this.third.warpSpeed()
+    this.third.warpSpeed('-ground')
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -23,10 +24,10 @@ export default class MainScene extends Scene3D {
       2,
       5000,
     )
-    // now modify the features (if needed)
-    // const camera= this.warpSpeed('camera')
     camera.position.set(-10, 50, -50)
     camera.lookAt(-50, 50, -30)
+    // now modify the features (if needed)
+    // const camera= this.warpSpeed('camera')
 
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -36,9 +37,9 @@ export default class MainScene extends Scene3D {
 
     //loading glb file
     // removing ground and orbital controls from the glb file
-    this.third.warpSpeed('-ground', '-orbitControls')
+    this.third.warpSpeed('ground', '-orbitControls')
 
-    this.third.load.gltf('/assets/glb/terrace3.glb').then((object) => {
+    this.third.load.gltf('/assets/glb/terrace2.glb').then((object) => {
       const scene = object.scenes[0]
 
       const terrace = new ExtendedObject3D()
