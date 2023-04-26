@@ -1,4 +1,4 @@
-import { ExtendedObject3D, Scene3D, } from '@enable3d/phaser-extension'
+import { ExtendedObject3D, Scene3D,  } from '@enable3d/phaser-extension'
 import * as THREE from 'three'
 
 export default class MainScene extends Scene3D {
@@ -7,7 +7,7 @@ export default class MainScene extends Scene3D {
   }
 
   init() {
-    this.accessThirdDimension()
+    this.accessThirdDimension({ maxSubSteps: 10, fixedTimeStep: 1 / 120 })
 
     this.third.renderer.outputEncoding = THREE.LinearEncoding
   }
@@ -15,16 +15,27 @@ export default class MainScene extends Scene3D {
   preload() {}
 
   async create() {
+
+        const { lights } = await this.third.warpSpeed(
+          '-ground',
+          '-orbitControls',
+        )
+        const { hemisphereLight, ambientLight, directionalLight } = lights
+        const intensity = 0.01
+        hemisphereLight.intensity = 0.01
+        ambientLight.intensity = 0.01
+        directionalLight.intensity = 0.01
+
     // set up scene (light, ground, grid, sky, orbitControls)
     this.third.warpSpeed('-ground')
 
     const camera = new THREE.PerspectiveCamera(
-      75,
+      35,
       window.innerWidth / window.innerHeight,
       2,
       5000,
     )
-    camera.position.set(-10, 50, -50)
+    camera.position.set(-100, 50, -50)
     camera.lookAt(-50, 50, -30)
     // now modify the features (if needed)
     // const camera= this.warpSpeed('camera')
@@ -47,10 +58,6 @@ export default class MainScene extends Scene3D {
       terrace.add(scene)
       this.third.add.existing(terrace)
 
-      const { hemisphereLight, ambientLight, directionalLight } = this.lights
-      hemisphereLight.intensity = 0.65
-      ambientLight.intensity = 0.65
-      directionalLight.intensity = 0.65
 
       scene3D.orbitControls.target.set(0, 5, 0)
 
