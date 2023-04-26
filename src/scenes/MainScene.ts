@@ -117,7 +117,7 @@ export default class MainScene extends Scene3D {
       this.bea.rotateY(Math.PI + 0.1)
       this.bea.add(bea)
       this.bea.rotation.set(0, Math.PI * 1.5, 0)
-      this.bea.position.set(-4.83, -0.18, 6.94)
+      this.bea.position.set(-4.83, -0.18, 7)
       //add shadow
       this.bea.traverse((child) => {
         if (child.isMesh) {
