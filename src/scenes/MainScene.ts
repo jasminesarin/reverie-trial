@@ -111,7 +111,7 @@ export default class MainScene extends Scene3D {
       })
     })
     //adding idle.glb file
-    this.third.load.gltf('public/assets/glb/idle.glb').then((object) => {
+    this.third.load.gltf('public/assets/glb/test.glb').then((object) => {
       const bea = object.scene.children[0]
       this.bea.name = 'bea'
       this.bea.rotateY(Math.PI + 0.1)
