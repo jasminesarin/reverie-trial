@@ -36,10 +36,8 @@ export default class MainScene extends Scene3D {
   async create() {
 
 
-    // this.third.add.box({ x: 1, y: 2 })
-    //this.third.physics.add.box({ x: 0, y: 4, z: 6 })
     // this.third.haveSomeFun()
-    //this.third.physics.add.box({ y: 10, x: 35 }, { lambert: { color: 'red' } })
+
 
     // const renderer = new THREE.WebGLRenderer()
     // renderer.setSize(window.innerWidth, window.innerHeight)
@@ -90,17 +88,17 @@ export default class MainScene extends Scene3D {
   }
 
   private createCamera() {
-    // const camera = new THREE.PerspectiveCamera(
-    //   35,
-    //   window.innerWidth / window.innerHeight,
-    //   2,
-    //   5000,
-    // )
+    const camera = new THREE.PerspectiveCamera(
+      35,
+      window.innerWidth / window.innerHeight,
+      2,
+      5000,
+    )
     // camera.position.set(-100, 50, -50)
     // camera.lookAt(-50, 50, -30)
     // now modify the features (if needed)
     // const camera= this.warpSpeed('camera')
-    //scene3D.orbitControls.target.set(0, 5, 0)
+    // scene3D.orbitControls.target.set(0, 5, 0)
 
     const zoom = 20
     const w = this.cameras.main.width / zoom
