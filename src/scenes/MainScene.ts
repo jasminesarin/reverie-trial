@@ -29,15 +29,17 @@ export default class MainScene extends Scene3D {
     this.accessThirdDimension({ maxSubSteps: 10, fixedTimeStep: 1 / 120 })
 
     this.third.renderer.outputEncoding = THREE.LinearEncoding
+              this.canJump = true
+              this.move = false
+
+              this.moveTop = 0
+              this.moveRight = 0
   }
 
   preload() {}
 
   async create() {
-
-
     // this.third.haveSomeFun()
-
 
     // const renderer = new THREE.WebGLRenderer()
     // renderer.setSize(window.innerWidth, window.innerHeight)
@@ -64,7 +66,6 @@ export default class MainScene extends Scene3D {
     // set up scene (light, ground, grid, sky, orbitControls)
     this.third.warpSpeed()
 
-
     const { lights } = await this.third.warpSpeed('-ground', '-orbitControls')
 
     if (lights === undefined) {
@@ -76,30 +77,9 @@ export default class MainScene extends Scene3D {
     hemisphereLight.intensity = 0.3
     ambientLight.intensity = 0.3
     directionalLight.intensity = 0.3
-
-          //move ground to terrace
-      // const { ground } = await this.third.warpSpeed('-orbitControls',)
-
-      //     if (ground === undefined) {
-      //       throw new Error('ground not loaded')
-      //     }
-      // ground.position.set(-14.41,-13.32,9.03)
-
   }
 
   private createCamera() {
-    const camera = new THREE.PerspectiveCamera(
-      35,
-      window.innerWidth / window.innerHeight,
-      2,
-      5000,
-    )
-    // camera.position.set(-100, 50, -50)
-    // camera.lookAt(-50, 50, -30)
-    // now modify the features (if needed)
-    // const camera= this.warpSpeed('camera')
-    // scene3D.orbitControls.target.set(0, 5, 0)
-
     const zoom = 20
     const w = this.cameras.main.width / zoom
     const h = this.cameras.main.height / zoom
@@ -121,7 +101,6 @@ export default class MainScene extends Scene3D {
   private createScene() {
     this.third.load.gltf('/assets/glb/terrace.glb').then((object) => {
       const scene = object.scenes[0]
-
 
       // Create terrace
       this.terrace = new ExtendedObject3D()
@@ -173,9 +152,12 @@ export default class MainScene extends Scene3D {
       this.third.add.existing(this.player)
 
       // Rotate the player
-      // this.player.rotateY(Math.PI + 0.1)
+      this.player.rotateY(Math.PI + 0.1)
       // this.player.rotation.set(0, Math.PI * 1.5, 0)
-      // this.player.position.set(0, 0, 0)
+      this.player.position.set(0, 0, 0)
+
+      //set scale
+      this.player.scale.set(2, 2, 2)
 
       //add shadow
       this.player.traverse((child) => {
@@ -197,16 +179,17 @@ export default class MainScene extends Scene3D {
 
       this.player.anims.play('idle')
 
-      // Add the player to the scene with a body
+      //Add the player to the scene with a body
       this.third.add.existing(this.player)
       this.third.physics.add.existing(this.player, {
-        shape: 'sphere',
-        radius: 0.25,
+        shape: 'box',
+        height: 1,
         width: 0.5,
-        offset: { y: -0.25 },
+        depth: 0.4,
+        offset: { y: -1, z: 1.5 },
       })
-      this.player.body.setFriction(0.8)
-      this.player.body.setAngularFactor(-10, -10, 0)
+      //this.player.body.setFriction(0.8)
+      //this.player.body.setAngularFactor(-10, -10, 0)
 
       // https://docs.panda3d.org/1.10/python/programming/physics/bullet/ccd
       this.player.body.setCcdMotionThreshold(1e-7)
@@ -236,6 +219,43 @@ export default class MainScene extends Scene3D {
           this.moveRight = delta.x
         }
       })
+
+      // Add Keys
+
+      this.keys = {
+        a: this.input.keyboard.addKey('a'),
+        w: this.input.keyboard.addKey('w'),
+        d: this.input.keyboard.addKey('d'),
+        s: this.input.keyboard.addKey('s'),
+        space: this.input.keyboard.addKey(32),
+      }
+      //Adding joystick
+      if (isTouchDevice) {
+            const joystick = new JoyStick()
+            const axis = joystick.add.axis({
+              styles: { left: 35, bottom: 35, size: 100 }
+            })
+            axis.onMove(event => {
+              /**
+               * Update Camera
+               */
+              const { top, right } = event
+              this.moveTop = top * 3
+              this.moveRight = right * 3
+            })
+            const buttonA = joystick.add.button({
+              letter: 'A',
+              styles: { right: 35, bottom: 110, size: 80 }
+            })
+            buttonA.onClick(() => this.jump())
+            const buttonB = joystick.add.button({
+              letter: 'B',
+              styles: { right: 110, bottom: 35, size: 80 }
+            })
+            buttonB.onClick(() => (this.move = true))
+            buttonB.onRelease(() => (this.move = false))
+          }
+
     }
   }
 }
