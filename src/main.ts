@@ -3,7 +3,6 @@ import { enable3d, Canvas } from '@enable3d/phaser-extension'
 import MainScene from './scenes/MainScene'
 import PreloadScene from './scenes/PreloadScene'
 
-
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.WEBGL,
   transparent: true,
