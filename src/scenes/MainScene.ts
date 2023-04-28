@@ -224,7 +224,6 @@ export default class MainScene extends Scene3D {
           styles: { left: 35, bottom: 35, size: 100 },
         })
         axis.onMove((event) => {
-
           // Update Camera
           const { top, right } = event
           this.moveTop = top * 3
@@ -243,27 +242,33 @@ export default class MainScene extends Scene3D {
         buttonB.onRelease(() => (this.move = false))
       }
     }
-    jump() {
-          if (!this.player || !this.canJump) return
-          this.canJump = false
-          this.player.animation.play('jump_running', 500, false)
-          this.time.addEvent({
-            delay: 650,
-            callback: () => {
-              this.canJump = true
-              this.player.animation.play('idle')
-            }
-          })
-          this.player.body.applyForceY(6)
-        }
-
-        update(time, delta) {
-          if (this.player && this.player.body) {
-            /**
-             * Update Controls
-             */
-            this.controls.update(this.moveRight * 2, -this.moveTop * 2)
-            if (!isTouchDevice) this.moveRight = this.moveTop = 0
+  }
+  jump() {
+    if (!this.player || !this.canJump) {
+      return
+    }
+    this.canJump = false
+    this.player.animation.play('jump_running', 500, false)
+    this.time.addEvent({
+      delay: 650,
+      callback: () => {
+        this.canJump = true
+        this.player.animation.play('idle')
+      },
+    })
+    this.player.body.applyForceY(6)
   }
 
+  update(time, delta) {
+    if (this.player && this.player.body) {
+      /**
+       * Update Controls
+       */
+      this.controls.update(this.moveRight * 2, -this.moveTop * 2)
+      if (!isTouchDevice) {
+        this.moveRight = 0
+        this.moveTop = 0
+      }
+    }
+  }
 }
