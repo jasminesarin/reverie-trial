@@ -29,34 +29,22 @@ export default class MainScene extends Scene3D {
     this.accessThirdDimension({ maxSubSteps: 10, fixedTimeStep: 1 / 120 })
 
     this.third.renderer.outputEncoding = THREE.LinearEncoding
-              this.canJump = true
-              this.move = false
+    this.canJump = true
+    this.move = false
 
-              this.moveTop = 0
-              this.moveRight = 0
+    this.moveTop = 0
+    this.moveRight = 0
   }
 
   preload() {}
 
   async create() {
-    // this.third.haveSomeFun()
-
-    // const renderer = new THREE.WebGLRenderer()
-    // renderer.setSize(window.innerWidth, window.innerHeight)
-    // document.body.appendChild(renderer.domElement)
-    // additionally warpSpeed() returns the camera, ground, lights, orbitControls.
-    // const { camera, lights, orbitControls } = await this.warpSpeed()
-
-    //loading glb file
-    // removing ground and orbital controls from the glb file
-    // this.third.warpSpeed('ground', '-orbitControls')
-
     this.createWorld()
     this.createCamera()
     this.createScene()
     this.createPlayer()
     this.addControls()
-    // this.addCamera()
+    //this.addCamera()
     // this.moveCamera()
   }
 
@@ -214,7 +202,7 @@ export default class MainScene extends Scene3D {
       pointerDrag.onMove((delta) => {
         if (pointerLock.isLocked()) {
           // FIX?
-          // this.player.position.setY(-delta.y)
+          this.player.position.setY(-delta.y)
           this.moveTop = -delta.y
           this.moveRight = delta.x
         }
@@ -231,31 +219,51 @@ export default class MainScene extends Scene3D {
       }
       //Adding joystick
       if (isTouchDevice) {
-            const joystick = new JoyStick()
-            const axis = joystick.add.axis({
-              styles: { left: 35, bottom: 35, size: 100 }
-            })
-            axis.onMove(event => {
-              /**
-               * Update Camera
-               */
-              const { top, right } = event
-              this.moveTop = top * 3
-              this.moveRight = right * 3
-            })
-            const buttonA = joystick.add.button({
-              letter: 'A',
-              styles: { right: 35, bottom: 110, size: 80 }
-            })
-            buttonA.onClick(() => this.jump())
-            const buttonB = joystick.add.button({
-              letter: 'B',
-              styles: { right: 110, bottom: 35, size: 80 }
-            })
-            buttonB.onClick(() => (this.move = true))
-            buttonB.onRelease(() => (this.move = false))
-          }
+        const joystick = new JoyStick()
+        const axis = joystick.add.axis({
+          styles: { left: 35, bottom: 35, size: 100 },
+        })
+        axis.onMove((event) => {
 
+          // Update Camera
+          const { top, right } = event
+          this.moveTop = top * 3
+          this.moveRight = right * 3
+        })
+        const buttonA = joystick.add.button({
+          letter: 'A',
+          styles: { right: 35, bottom: 110, size: 80 },
+        })
+        buttonA.onClick(() => this.jump())
+        const buttonB = joystick.add.button({
+          letter: 'B',
+          styles: { right: 110, bottom: 35, size: 80 },
+        })
+        buttonB.onClick(() => (this.move = true))
+        buttonB.onRelease(() => (this.move = false))
+      }
     }
+    jump() {
+          if (!this.player || !this.canJump) return
+          this.canJump = false
+          this.player.animation.play('jump_running', 500, false)
+          this.time.addEvent({
+            delay: 650,
+            callback: () => {
+              this.canJump = true
+              this.player.animation.play('idle')
+            }
+          })
+          this.player.body.applyForceY(6)
+        }
+
+        update(time, delta) {
+          if (this.player && this.player.body) {
+            /**
+             * Update Controls
+             */
+            this.controls.update(this.moveRight * 2, -this.moveTop * 2)
+            if (!isTouchDevice) this.moveRight = this.moveTop = 0
   }
+
 }
