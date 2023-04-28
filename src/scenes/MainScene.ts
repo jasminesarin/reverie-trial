@@ -20,6 +20,7 @@ export default class MainScene extends Scene3D {
   }
   terrace!: ExtendedObject3D
   player!: ExtendedObject3D
+  bird!: ExtendedObject3D
   controls!: ThirdPersonControls
   canJump = true
   canMove = false
@@ -56,15 +57,17 @@ export default class MainScene extends Scene3D {
     this.createScene()
     this.createPlayer()
     this.addControls()
+    this.addCollisions()
+    this.addBirds()
     //this.addCamera()
     // this.moveCamera()
   }
 
   private async createWorld() {
     // set up scene (light, ground, grid, sky, orbitControls)
-    // this.third.warpSpeed()
+    this.third.warpSpeed('-light')
 
-    const { lights, ground } = await this.third.warpSpeed('-orbitControls')
+    const { lights } = await this.third.warpSpeed('-orbitControls', 'ground')
 
     if (lights === undefined) {
       throw new Error('Lights not loaded')
@@ -72,13 +75,13 @@ export default class MainScene extends Scene3D {
 
     // TODO: Fix this
     const { ambientLight, directionalLight, hemisphereLight } = lights
-    hemisphereLight.intensity = 0.3
-    ambientLight.intensity = 0.3
-    directionalLight.intensity = 0.3
+    hemisphereLight.intensity = 0.65
+    ambientLight.intensity = 0.65
+    directionalLight.intensity = 0.65
   }
 
   private createCamera() {
-    const zoom = 20
+    const zoom = 10
     const w = this.cameras.main.width / zoom
     const h = this.cameras.main.height / zoom
 
@@ -165,8 +168,8 @@ export default class MainScene extends Scene3D {
 
         child.castShadow = true
         child.receiveShadow = true
-        // child.material.roughness = 1
-        // child.material.metalness = 0
+        child.material.roughness = 1
+        child.material.metalness = 0
       })
 
       this.third.animationMixers.add(this.player.anims.mixer)
@@ -193,6 +196,70 @@ export default class MainScene extends Scene3D {
       // https://docs.panda3d.org/1.10/python/programming/physics/bullet/ccd
       this.player.body.setCcdMotionThreshold(1e-7)
       this.player.body.setCcdSweptSphereRadius(0.25)
+    })
+  }
+
+  private addBirds() {
+    this.third.load.gltf('public/assets/glb/bird.glb').then((object) => {
+      const scene = object.scenes[0]
+
+      this.bird = new ExtendedObject3D()
+      this.bird.name = 'scene'
+      this.bird.add(scene)
+      this.third.add.existing(this.bird)
+
+      this.bird.position.set(0, 20, 0)
+
+      //set scale
+      this.bird.scale.set(2, 2, 2)
+
+      //add shadow
+      this.bird.traverse((child) => {
+        if (!child.isMesh) {
+          return
+        }
+
+        child.castShadow = true
+        child.receiveShadow = true
+        child.material.roughness = 1
+        child.material.metalness = 0
+      })
+
+      this.third.animationMixers.add(this.bird.anims.mixer)
+      object.animations.forEach((animation) => {
+        if (animation.name) {
+          this.bird.anims.add(animation.name, animation)
+        }
+      })
+
+      this.bird.anims.play('idle')
+
+      //Add the player to the scene with a body
+      this.third.add.existing(this.bird)
+      this.third.physics.add.existing(this.bird, {
+        shape: 'box',
+        height: 0.25,
+        width: 0.25,
+        depth: 0.25,
+        offset: { y: -1, z: 0.25 },
+      })
+      //this.bird.body.setFriction(0.8)
+      //this.bird.body.setAngularFactor(-10, -10, 0)
+
+      // https://docs.panda3d.org/1.10/python/programming/physics/bullet/ccd
+      this.bird.body.setCcdMotionThreshold(1e-7)
+      this.bird.body.setCcdSweptSphereRadius(0.25)
+    })
+  }
+
+  private addCollisions() {
+    // collision between player and bird (will set body.checkCollisions = true, on the player and the bird)
+    this.third.physics.add.collider(this.player, this.bird, (event) => {
+      console.log(`player and bird: ${event}`)
+    })
+    this.player.body.on.collision((otherObject, event) => {
+      if (otherObject.name !== 'ground')
+        console.log(`player and ${otherObject.name}: ${event}`)
     })
   }
 
