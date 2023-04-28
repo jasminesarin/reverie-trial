@@ -1,5 +1,6 @@
 import {
   ExtendedObject3D,
+  JoyStick,
   PointerDrag,
   PointerLock,
   Scene3D,
@@ -20,6 +21,22 @@ export default class MainScene extends Scene3D {
   terrace!: ExtendedObject3D
   player!: ExtendedObject3D
   controls!: ThirdPersonControls
+  canJump = true
+  canMove = false
+  moveTop = 0
+  moveRight = 0
+  keys!: {
+    a: Phaser.Input.Keyboard.Key
+    w: Phaser.Input.Keyboard.Key
+    d: Phaser.Input.Keyboard.Key
+    s: Phaser.Input.Keyboard.Key
+    space: Phaser.Input.Keyboard.Key
+  }
+  rotation: THREE.Vector3
+  theta: number
+  rotationPlayer: THREE.Vector3
+  thetaPlayer: number
+  speed = 4
 
   constructor() {
     super({ key: 'MainScene' })
@@ -29,11 +46,6 @@ export default class MainScene extends Scene3D {
     this.accessThirdDimension({ maxSubSteps: 10, fixedTimeStep: 1 / 120 })
 
     this.third.renderer.outputEncoding = THREE.LinearEncoding
-    this.canJump = true
-    this.move = false
-
-    this.moveTop = 0
-    this.moveRight = 0
   }
 
   preload() {}
@@ -48,13 +60,11 @@ export default class MainScene extends Scene3D {
     // this.moveCamera()
   }
 
-  update() {}
-
   private async createWorld() {
     // set up scene (light, ground, grid, sky, orbitControls)
-    this.third.warpSpeed()
+    // this.third.warpSpeed()
 
-    const { lights } = await this.third.warpSpeed('-ground', '-orbitControls')
+    const { lights, ground } = await this.third.warpSpeed('-orbitControls')
 
     if (lights === undefined) {
       throw new Error('Lights not loaded')
@@ -98,14 +108,14 @@ export default class MainScene extends Scene3D {
       this.terrace.add(scene)
       this.third.add.existing(this.terrace)
 
-      // add animations
-      object.animations.forEach((anim, i) => {
-        this.terrace.mixer = this.third.animationMixers.create(this.terrace)
-        // overwrite the action to be an array of actions
-        this.terrace.action = []
-        this.terrace.action[i] = this.terrace.mixer.clipAction(anim)
-        this.terrace.action[i].play()
-      })
+      // TODO: add animations
+      // object.animations.forEach((anim, i) => {
+      //   this.terrace.mixer = this.third.animationMixers.create(this.terrace)
+      //   // overwrite the action to be an array of actions
+      //   this.terrace.action = []
+      //   this.terrace.action[i] = this.terrace.mixer.clipAction(anim)
+      //   this.terrace.action[i].play()
+      // })
 
       this.terrace.traverse((child: any) => {
         if (!child.isMesh) {
@@ -153,9 +163,10 @@ export default class MainScene extends Scene3D {
           return
         }
 
-        child.castShadow = child.receiveShadow = true
-        child.material.roughness = 1
-        child.material.metalness = 0
+        child.castShadow = true
+        child.receiveShadow = true
+        // child.material.roughness = 1
+        // child.material.metalness = 0
       })
 
       this.third.animationMixers.add(this.player.anims.mixer)
@@ -217,58 +228,142 @@ export default class MainScene extends Scene3D {
         s: this.input.keyboard.addKey('s'),
         space: this.input.keyboard.addKey(32),
       }
+
       //Adding joystick
       if (isTouchDevice) {
         const joystick = new JoyStick()
+
         const axis = joystick.add.axis({
           styles: { left: 35, bottom: 35, size: 100 },
         })
+
         axis.onMove((event) => {
           // Update Camera
-          const { top, right } = event
-          this.moveTop = top * 3
-          this.moveRight = right * 3
+          this.moveTop = event.x * 3
+          this.moveRight = event.y * 3
         })
+
         const buttonA = joystick.add.button({
           letter: 'A',
           styles: { right: 35, bottom: 110, size: 80 },
         })
+
         buttonA.onClick(() => this.jump())
+
         const buttonB = joystick.add.button({
           letter: 'B',
           styles: { right: 110, bottom: 35, size: 80 },
         })
-        buttonB.onClick(() => (this.move = true))
-        buttonB.onRelease(() => (this.move = false))
+
+        buttonB.onClick(() => (this.canMove = true))
+        buttonB.onRelease(() => (this.canMove = false))
       }
     }
   }
+
   jump() {
     if (!this.player || !this.canJump) {
       return
     }
+
     this.canJump = false
-    this.player.animation.play('jump_running', 500, false)
+    this.player.anims.play('jump_running', 500, false)
+
     this.time.addEvent({
       delay: 650,
       callback: () => {
         this.canJump = true
-        this.player.animation.play('idle')
+        this.player.anims.play('idle')
       },
     })
+
     this.player.body.applyForceY(6)
   }
 
   update(time, delta) {
     if (this.player && this.player.body) {
-      /**
-       * Update Controls
-       */
-      this.controls.update(this.moveRight * 2, -this.moveTop * 2)
+      // Update Controls
+
+      const deltaX = this.moveRight * 2
+      const deltaY = -this.moveTop * 2
+
+      // this.controls.update(deltaX, deltaY)
+
       if (!isTouchDevice) {
         this.moveRight = 0
         this.moveTop = 0
       }
+
+      this.playerTurn()
+      this.playerMove()
+      this.playerJump()
+    }
+  }
+
+  playerTurn() {
+    /**
+     * Player Turn
+     */
+    const v3 = new THREE.Vector3()
+
+    this.rotation = this.third.camera.getWorldDirection(v3)
+    this.theta = Math.atan2(this.rotation.x, this.rotation.z)
+    this.rotationPlayer = this.player.getWorldDirection(v3)
+    this.thetaPlayer = Math.atan2(this.rotationPlayer.x, this.rotationPlayer.z)
+    this.player.body.setAngularVelocityY(0)
+
+    const l = Math.abs(this.theta - this.thetaPlayer)
+    let rotationSpeed = isTouchDevice ? 2 : 4
+    let d = Math.PI / 24
+
+    if (l > d) {
+      if (l > Math.PI - d) {
+        rotationSpeed *= -1
+      }
+
+      if (this.theta < this.thetaPlayer) {
+        rotationSpeed *= -1
+      }
+
+      this.player.body.setAngularVelocityY(rotationSpeed)
+    }
+  }
+
+  playerMove() {
+    // if (this.canMove === false) {
+    //   return
+    // }
+
+    /**
+     * Player Move
+     */
+    if (this.keys.w.isDown) {
+      this.playerMoveForward()
+    } else {
+      if (this.player.anims.current === 'run' && this.canJump) {
+        this.player.anims.play('idle')
+      }
+    }
+  }
+
+  private playerMoveForward() {
+    if (this.player.anims.current === 'idle' && this.canJump) {
+      this.player.anims.play('run')
+    }
+
+    const x = Math.sin(this.theta) * this.speed
+    const y = this.player.body.velocity.y
+    const z = Math.cos(this.theta) * this.speed
+
+    this.player.body.setVelocity(x, y, z)
+  }
+
+  playerJump() {
+    /**
+     * Player Jump
+     */
+    if (this.keys.space.isDown && this.canJump) {
+      this.jump()
     }
   }
 }
